@@ -79,13 +79,15 @@ class WPCF_Conditional extends WPCF_Field
     function __construct() {
         parent::__construct();
         $fields = new WPCF_Fields();
-        foreach ( $fields->fields->all as $f_id => $f ) {
-            if ( !empty( $f['data']['conditional_display']['conditions'] ) ) {
-                foreach ( $f['data']['conditional_display']['conditions'] as
-                            $condition ) {
-                    $this->collected[$f_id][] = $condition;
-                    if ( !empty( $condition['field'] ) ) {
-                        $this->triggers[$condition['field']][$f_id][] = $condition;
+        if ( is_array( $fields->fields->all ) ) {
+            foreach ( $fields->fields->all as $f_id => $f ) {
+                if ( !empty( $f['data']['conditional_display']['conditions'] ) ) {
+                    foreach ( $f['data']['conditional_display']['conditions'] as
+                                $condition ) {
+                        $this->collected[$f_id][] = $condition;
+                        if ( !empty( $condition['field'] ) ) {
+                            $this->triggers[$condition['field']][$f_id][] = $condition;
+                        }
                     }
                 }
             }
@@ -145,6 +147,21 @@ class WPCF_Conditional extends WPCF_Field
             $element['#attributes']['class'] .= ' ' . $this->css_class_trigger;
         } else {
             $element['#attributes']['class'] = $this->css_class_trigger;
+        }
+
+        /*
+         * 
+         * Radios needs per option
+         */
+        if ( $element['#type'] == 'radios'
+                && ( isset( $element['#options'] ) && is_array( $element['#options'] )) ) {
+            foreach ( $element['#options'] as $_k => $_v ) {
+                if ( isset( $_v['#attributes']['class'] ) ) {
+                    $element['#options'][$_k]['#attributes']['class'] .= ' ' . $this->css_class_trigger;
+                } else {
+                    $element['#options'][$_k]['#attributes']['class'] = $this->css_class_trigger;
+                }
+            }
         }
 
         return apply_filters( 'types_conditional_field_trigger', $element, $this );
